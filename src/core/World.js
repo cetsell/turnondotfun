@@ -9,6 +9,7 @@ import { Entities } from './systems/Entities'
 import { Physics } from './systems/Physics'
 import { Stage } from './systems/Stage'
 import { Scripts } from './systems/Scripts'
+import { Toast } from './systems/Toast'
 
 export class World extends EventEmitter {
   constructor() {
@@ -37,6 +38,7 @@ export class World extends EventEmitter {
     this.register('entities', Entities)
     this.register('physics', Physics)
     this.register('stage', Stage)
+    this.register('toast', Toast)
   }
 
   register(key, System) {

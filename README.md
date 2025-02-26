@@ -46,3 +46,49 @@ This project is still in alpha as we transition all of our [reference platform](
 Most features are already here in this repo but still need to be connected up to work with self hosting in mind.
 Note that APIs are highly likely to change during this time.
 
+## Home Page Setup
+
+The home page features a modern, interactive design with several key sections:
+
+1. **Hero Section**: Features a looping video or animated 3D scene with a ThreeJS fallback.
+2. **Key Features**: Showcases the main features of the platform with images and descriptions.
+3. **Interactive Demo**: Allows users to try out the AI storytelling capabilities.
+4. **Social Proof**: Displays testimonials and statistics.
+5. **Call to Action**: Encourages users to sign up or explore the marketplace.
+
+### Landing Page Path
+
+The landing page is accessible at:
+
+```
+http://localhost:3000/home
+```
+
+The root path (`/`) is reserved for the main game world, which includes a banner linking to the landing page.
+
+### Image Setup
+
+For the home page to display correctly, you'll need to set up the following image directories:
+
+```bash
+mkdir -p public/images/features
+mkdir -p public/videos
+```
+
+#### Required Images:
+
+- `/public/images/hero-poster.jpg` - Hero section background poster
+- `/public/images/features/rich-narratives.jpg` - Rich narratives feature image
+- `/public/images/features/unique-characters.jpg` - Unique characters feature image
+- `/public/images/features/real-time-3d.jpg` - Real-time 3D feature image
+- `/public/images/features/creator-marketplace.jpg` - Creator marketplace feature image
+- `/public/images/interactive-demo.jpg` - Interactive demo section image
+
+#### Required Videos:
+
+- `/public/videos/hero-background.mp4` - Hero section background video
+
+### Development Mode
+
+In development mode, placeholder images will be generated automatically using the `FeatureImages` component. These are for development purposes only and should be replaced with high-quality images for production.
+

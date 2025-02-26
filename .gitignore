@@ -5,4 +5,5 @@
 .notes/
 node_modules/
 build/
-world*
+world/assets/*
+world/db.sqlite

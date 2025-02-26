@@ -9,7 +9,6 @@ import * as THREE from '../extras/three'
 
 const SAVE_INTERVAL = parseInt(process.env.SAVE_INTERVAL || '60') // seconds
 const PING_RATE = 1 // seconds
-const defaultSpawn = '{ "position": [0, 0, 0], "quaternion": [0, 0, 0, 1] }'
 
 /**
  * Server Network System
@@ -30,6 +29,7 @@ export class ServerNetwork extends System {
     this.dirtyApps = new Set()
     this.isServer = true
     this.queue = []
+    this.spawn = { position: [0, 0, 0], quaternion: [0, 0, 0, 1] }
   }
 
   init({ db }) {
@@ -39,7 +39,9 @@ export class ServerNetwork extends System {
   async start() {
     // get spawn
     const spawnRow = await this.db('config').where('key', 'spawn').first()
-    this.spawn = JSON.parse(spawnRow?.value || defaultSpawn)
+    if (spawnRow) {
+      this.spawn = JSON.parse(spawnRow.value)
+    }
     // hydrate blueprints
     const blueprints = await this.db('blueprints')
     for (const blueprint of blueprints) {
@@ -178,11 +180,34 @@ export class ServerNetwork extends System {
     this.saveTimerId = setTimeout(this.save, SAVE_INTERVAL * 1000)
   }
 
-  async onConnection(ws, authToken) {
+  async onConnection(ws, authToken, authenticatedUser) {
     try {
       // get or create user
       let user
-      if (authToken) {
+      
+      // If we have an authenticated user from the middleware, use that
+      if (authenticatedUser) {
+        // Check if this user already exists in our database
+        user = await this.db('users').where('id', authenticatedUser.id).first()
+        
+        if (!user) {
+          // Create a new user record if it doesn't exist
+          user = {
+            id: authenticatedUser.id,
+            name: authenticatedUser.email.split('@')[0], // Default username from email
+            email: authenticatedUser.email,
+            avatar: null,
+            roles: '',
+            createdAt: moment().toISOString(),
+          }
+          await this.db('users').insert(user)
+        }
+        
+        // Use the authenticated user's token
+        authToken = await createJWT({ userId: user.id })
+      }
+      // Fall back to token-based auth if no authenticated user
+      else if (authToken) {
         try {
           const { userId } = await readJWT(authToken)
           user = await this.db('users').where('id', userId).first()
@@ -190,6 +215,8 @@ export class ServerNetwork extends System {
           console.error('failed to read authToken:', authToken)
         }
       }
+      
+      // If we still don't have a user, create an anonymous one
       if (!user) {
         user = {
           id: uuid(),
@@ -201,6 +228,7 @@ export class ServerNetwork extends System {
         await this.db('users').insert(user)
         authToken = await createJWT({ userId: user.id })
       }
+      
       user.roles = user.roles.split(',')
 
       // if there is no admin code, everyone is a temporary admin (eg for local dev)
@@ -238,9 +266,11 @@ export class ServerNetwork extends System {
         authToken,
       })
 
+      // add to sockets
       this.sockets.set(socket.id, socket)
     } catch (err) {
-      console.error(err)
+      console.error('failed to handle connection:', err)
+      ws.close()
     }
   }
 

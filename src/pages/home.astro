@@ -1,0 +1,204 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+import HeroScene from '../components/HeroScene.jsx';
+import InteractiveDemo from '../components/InteractiveDemo.jsx';
+import FeatureCard from '../components/FeatureCard.jsx';
+import Testimonial from '../components/Testimonial.jsx';
+import FeatureImages from '../components/FeatureImages.jsx';
+
+// Fetch featured worlds or stories
+const { data: featuredWorlds } = await supabase
+  .from('stories')
+  .select('*')
+  .limit(3);
+---
+
+<Layout title="MyWorld - Seductive Stories Brought to Life by AI">
+  <!-- Placeholder image generator - only visible in development -->
+  {import.meta.env.DEV && <FeatureImages client:only="react" />}
+  
+  <div class="relative">
+    <!-- Hero Section -->
+    <div class="relative h-screen flex items-center justify-center overflow-hidden">
+      <!-- Video Background (fallback to ThreeJS scene) -->
+      <div class="absolute inset-0 z-0">
+        <video
+          class="w-full h-full object-cover"
+          autoplay
+          loop
+          muted
+          poster="/images/hero-poster.jpg"
+        >
+          <source src="/videos/hero-background.mp4" type="video/mp4" />
+          <!-- ThreeJS scene as fallback -->
+          <HeroScene client:load />
+        </video>
+      </div>
+      
+      <!-- Gradient Overlay -->
+      <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/90 z-10"></div>
+      
+      <!-- Hero Content -->
+      <div class="relative z-20 text-center px-4 max-w-5xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          Step Into Seductive Stories Brought to Life by AI
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto">
+          Explore immersive 3D worlds, customize your avatar, and experience captivating characters with real-time interactions.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/worlds" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg font-medium text-lg transition-colors">
+            Start Your Story Now
+          </a>
+          <a href="/marketplace" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-medium text-lg hover:bg-white/10 transition-colors">
+            Explore the Marketplace
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Features Section -->
+    <section class="max-w-7xl mx-auto px-4 py-24">
+      <h2 class="text-4xl font-bold text-white text-center mb-16">Experience the Future of Interactive Storytelling</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <FeatureCard
+          title="Rich Narratives"
+          description="Dive into AI-crafted stories that evolve with your choices—seduction, intrigue, and adventure await."
+          imageUrl="/images/features/rich-narratives.jpg"
+        />
+        
+        <FeatureCard
+          title="Unique Characters"
+          description="Meet unforgettable characters with personalities and animations powered by cutting-edge AI and motion capture."
+          imageUrl="/images/features/unique-characters.jpg"
+        />
+        
+        <FeatureCard
+          title="Real-Time 3D"
+          description="Interact in stunning, creator-built worlds where every move feels alive."
+          imageUrl="/images/features/real-time-3d.jpg"
+        />
+        
+        <FeatureCard
+          title="Creator Marketplace"
+          description="Build or buy your own stories, avatars, and animations to share with the world."
+          imageUrl="/images/features/creator-marketplace.jpg"
+        />
+      </div>
+    </section>
+    
+    <!-- Interactive Demo Section -->
+    <section class="bg-gradient-to-r from-purple-900 to-indigo-900 py-24">
+      <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-4xl font-bold text-white text-center mb-16">Experience the Magic</h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h3 class="text-3xl font-bold text-white mb-6">Create Your Own Adventure</h3>
+            <p class="text-xl text-gray-200 mb-8">
+              Our AI-powered platform lets you craft unique stories and characters with just a few prompts. See how it works with our interactive demo.
+            </p>
+            <InteractiveDemo client:visible />
+          </div>
+          
+          <div class="bg-gray-900 rounded-xl overflow-hidden shadow-xl">
+            <div class="aspect-video relative">
+              <!-- Placeholder for Three.js mini-demo or video -->
+              <img 
+                src="/images/interactive-demo.jpg" 
+                alt="Interactive Demo" 
+                class="w-full h-full object-cover"
+              />
+              <div class="absolute inset-0 flex items-center justify-center">
+                <button class="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-4 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Social Proof Section -->
+    <section class="max-w-7xl mx-auto px-4 py-24">
+      <h2 class="text-4xl font-bold text-white text-center mb-6">What Our Users Say</h2>
+      <p class="text-xl text-gray-300 text-center mb-16 max-w-3xl mx-auto">
+        Join thousands of users already creating and experiencing immersive stories.
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <Testimonial
+          quote="The characters feel so real! The way they move and respond to my choices is unlike anything I've experienced before."
+          author="Alex Morgan"
+          role="Beta Tester"
+        />
+        
+        <Testimonial
+          quote="As a creator, I've been able to bring my stories to life in ways I never thought possible. The AI and motion capture tools are revolutionary."
+          author="Jamie Chen"
+          role="Content Creator"
+        />
+        
+        <Testimonial
+          quote="The immersive worlds and seductive storytelling have me coming back every day. It's addictive in the best way possible."
+          author="Sam Rodriguez"
+          role="Premium Member"
+        />
+      </div>
+      
+      <div class="mt-16 text-center">
+        <div class="bg-gray-800 inline-block rounded-lg px-8 py-4 mb-8">
+          <div class="flex gap-8 justify-center">
+            <div>
+              <span class="block text-3xl font-bold text-purple-400">100+</span>
+              <span class="text-gray-300">Unique Stories</span>
+            </div>
+            <div>
+              <span class="block text-3xl font-bold text-purple-400">50+</span>
+              <span class="text-gray-300">Creators Onboard</span>
+            </div>
+            <div>
+              <span class="block text-3xl font-bold text-purple-400">10,000+</span>
+              <span class="text-gray-300">Happy Users</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Call to Action Section -->
+    <section class="bg-gradient-to-r from-purple-900 to-indigo-900 py-24">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-4xl font-bold text-white mb-6">Ready to Step Into Your Fantasy?</h2>
+        <p class="text-xl text-gray-200 mb-10">
+          Join our community of creators and explorers today and experience stories like never before.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/worlds" class="bg-white text-purple-900 hover:bg-gray-100 px-8 py-4 rounded-lg font-medium text-lg transition-colors">
+            Start Your Story Now
+          </a>
+          <a href="/marketplace" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-medium text-lg hover:bg-white/10 transition-colors">
+            Join the Community
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+</style> 

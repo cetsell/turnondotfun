@@ -12,39 +12,49 @@ import {
   UnplugIcon,
   WifiOffIcon,
   ZapIcon,
+  LogOutIcon,
+  HomeIcon
 } from 'lucide-react'
 import moment from 'moment'
+import * as THREE from 'three'
 
 import { InspectPane } from './InspectPane'
 import { CodePane } from './CodePane'
 import { AvatarPane } from './AvatarPane'
+import { AvatarSelectionPanel } from './AvatarSelectionPanel'
+import { MarketplaceButton } from './MarketplaceButton'
+import { LandingPageButton } from './LandingPageButton'
+import MarketplacePane from './MarketplacePane'
 import { useElemSize } from './useElemSize'
 import { MouseLeftIcon } from './MouseLeftIcon'
 import { MouseRightIcon } from './MouseRightIcon'
 import { MouseWheelIcon } from './MouseWheelIcon'
 import { buttons, propToLabel } from '../../core/extras/buttons'
 import { cls } from '../utils'
-import { hasRole, uuid } from '../../core/utils'
+import { hasRole } from '../../core/utils'
 import { ControlPriorities } from '../../core/extras/ControlPriorities'
 import { AppsPane } from './AppsPane'
 import { SettingsPane } from './SettingsPane'
+import { ErrorBoundary } from './ErrorBoundary'
 
-export function GUI({ world }) {
+export function GUI({ world, onExit, worldId }) {
   const [ref, width, height] = useElemSize()
   return (
-    <div
-      ref={ref}
-      css={css`
-        position: absolute;
-        inset: 0;
-      `}
-    >
-      {width > 0 && <Content world={world} width={width} height={height} />}
-    </div>
+    <ErrorBoundary>
+      <div
+        ref={ref}
+        css={css`
+          position: absolute;
+          inset: 0;
+        `}
+      >
+        {width > 0 && <Content world={world} width={width} height={height} onExit={onExit} worldId={worldId} />}
+      </div>
+    </ErrorBoundary>
   )
 }
 
-function Content({ world, width, height }) {
+function Content({ world, width, height, onExit, worldId }) {
   const small = width < 600
   const [ready, setReady] = useState(false)
   const [player, setPlayer] = useState(() => world.entities.player)
@@ -54,34 +64,195 @@ function Content({ world, width, height }) {
   const [disconnected, setDisconnected] = useState(false)
   const [settings, setSettings] = useState(false)
   const [apps, setApps] = useState(false)
+  const [currentEmote, setCurrentEmote] = useState(null)
+  const [currentSkybox, setCurrentSkybox] = useState('asset://day2.hdr')
+  const [showEmoteMenu, setShowEmoteMenu] = useState(false)
+  const [showMarketplace, setShowMarketplace] = useState(false)
+
   useEffect(() => {
-    world.on('ready', setReady)
+    console.log('GUI: Setting up event listeners')
+    
+    const onReady = () => {
+      console.log('GUI: World ready event received')
+      setReady(true)
+    }
+    
+    world.on('ready', onReady)
     world.on('player', setPlayer)
     world.on('inspect', setInspect)
     world.on('code', setCode)
     world.on('avatar', setAvatar)
     world.on('disconnect', setDisconnected)
+
+    // Add control binding for B key to toggle emote menu
+    const control = world.controls.bind({ priority: ControlPriorities.GUI })
+    control.keyB.onPress = () => {
+      setShowEmoteMenu(prev => !prev)
+    }
+
+    console.log('GUI: Event listeners set up')
+
     return () => {
-      world.off('ready', setReady)
+      console.log('GUI: Cleaning up event listeners')
+      world.off('ready', onReady)
       world.off('player', setPlayer)
       world.off('inspect', setInspect)
       world.off('code', setCode)
       world.off('avatar', setAvatar)
       world.off('disconnect', setDisconnected)
+      control.release()
     }
   }, [])
+
+  const handleSelectAvatar = (avatar) => {
+    // Update the player's avatar directly
+    const player = world.entities.player
+    if (player) {
+      // Update locally
+      player.modify({ 
+        avatar: `asset://${avatar.name}`, 
+        sessionAvatar: null 
+      })
+      
+      // Update for everyone
+      world.network.send('entityModified', {
+        id: player.data.id,
+        avatar: `asset://${avatar.name}`
+      })
+    }
+  }
+
+  const handleSelectEmote = (emoteUrl) => {
+    setCurrentEmote(emoteUrl)
+    if (player) {
+      // Use the emote directly since it's from the Emotes enum
+      player.setEmote(emoteUrl)
+    }
+  }
+
+  const handleSelectSkybox = (skybox) => {
+    setCurrentSkybox(skybox.url)
+    
+    const sunDirection = new THREE.Vector3(-1, -2, -2).normalize()
+    
+    // Create or update the sky node
+    const sky = world.entities.find(e => e.data.type === 'sky')
+    if (sky) {
+      // Update existing sky node using the proxy to ensure setters are called
+      const proxy = sky.getProxy()
+      proxy.hdr = skybox.url
+      proxy.sunDirection = sunDirection
+      proxy.sunIntensity = 1
+      proxy.sunColor = '#ffffff'
+    } else {
+      // Create a new sky node with initial properties
+      world.entities.add({
+        type: 'sky',
+        data: {
+          hdr: skybox.url,
+          sunDirection: sunDirection,
+          sunIntensity: 1,
+          sunColor: '#ffffff'
+        }
+      }, true)
+    }
+  }
+
+  const handleShowLandingPage = () => {
+    // Remove the skipLandingPage flag from localStorage
+    localStorage.removeItem('skipLandingPage')
+    // Reload the page to show the landing page
+    window.location.reload()
+  }
+
   return (
     <div
-      className='gui'
       css={css`
         position: absolute;
         inset: 0;
+        pointer-events: none;
+        user-select: none;
+        & > * {
+          pointer-events: auto;
+        }
       `}
     >
+      {/* Exit button */}
+      <div
+        css={css`
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          z-index: 1000;
+        `}
+      >
+        <button
+          onClick={onExit}
+          css={css`
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            &:hover {
+              background: rgba(0, 0, 0, 0.7);
+            }
+          `}
+        >
+          <HomeIcon size={16} />
+          Exit World
+        </button>
+      </div>
+      
+      {/* World ID indicator */}
+      {worldId && (
+        <div
+          css={css`
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-size: 14px;
+            z-index: 1000;
+          `}
+        >
+          World: {worldId}
+        </div>
+      )}
+      
+      {ready && (
+        <MarketplaceButton 
+          onClick={() => {
+            console.log('MarketplaceButton: Clicked')
+            setShowMarketplace(!showMarketplace)
+            world.toast.show('Opening marketplace...')
+            
+            // TODO: Add marketplace UI here
+            console.log('showMarketplace:', !showMarketplace)
+          }} 
+        />
+      )}
+      
+      {ready && (
+        <LandingPageButton 
+          onClick={handleShowLandingPage} 
+        />
+      )}
+      
       {inspect && <InspectPane key={`inspect-${inspect.data.id}`} world={world} entity={inspect} />}
       {inspect && code && <CodePane key={`code-${inspect.data.id}`} world={world} entity={inspect} />}
       {avatar && <AvatarPane key={avatar.hash} world={world} info={avatar} />}
       {disconnected && <Disconnected />}
+      {showMarketplace && <MarketplacePane world={world} onClose={() => setShowMarketplace(false)} />}
       <Reticle world={world} />
       {<Toast world={world} />}
       {ready && (
@@ -95,6 +266,18 @@ function Content({ world, width, height }) {
       {settings && <SettingsPane world={world} player={player} close={() => setSettings(false)} />}
       {apps && <AppsPane world={world} close={() => setApps(false)} />}
       {!ready && <LoadingOverlay />}
+      
+      {/* Show emote menu when toggled */}
+      {showEmoteMenu && (
+        <AvatarSelectionPanel 
+          onSelectAvatar={handleSelectAvatar}
+          onSelectEmote={handleSelectEmote}
+          onSelectSkybox={handleSelectSkybox}
+          currentEmote={currentEmote}
+          currentSkybox={currentSkybox}
+          defaultTab="emotes"
+        />
+      )}
     </div>
   )
 }
@@ -301,9 +484,8 @@ function Side({ world, player, toggleSettings, toggleApps }) {
   )
 }
 
-const MESSAGES_REFRESH_RATE = 30 // every x seconds
-
 function Messages({ world, active, touch }) {
+  const MESSAGES_REFRESH_RATE = 30 // every x seconds
   const initRef = useRef()
   const contentRef = useRef()
   const spacerRef = useRef()

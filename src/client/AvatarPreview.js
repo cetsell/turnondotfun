@@ -80,30 +80,47 @@ export class AvatarPreview {
     if (this.file.size > MAX_UPLOAD_SIZE) {
       return { error: `Max file size ${MAX_UPLOAD_SIZE_LABEL}` }
     }
-    // load hdri
+
+    // Load avatar first
+    this.avatar = await this.world.loader.load('avatar', this.url)
+    
+    // Create nodes with proper hooks
+    const nodes = this.avatar.toNodes({
+      camera: this.camera,
+      scene: this.scene,
+      octree: null,
+      loader: this.world.loader,
+    })
+    
+    this.node = nodes.get('avatar')
+    this.node.activate({
+      world: this.world,
+      label: 'preview'
+    })
+
+    // Initialize instance and set initial emote
+    await this.node.mount()
+    if (this.node.instance) {
+      this.node.instance.setEmote(Emotes.IDLE)
+    }
+
+    // Load and apply HDR environment
     const texture = await this.world.loader.load('hdr', HDR_URL)
     texture.mapping = THREE.EquirectangularReflectionMapping
     this.scene.environment = texture
-    // load avatar
-    this.avatar = await this.world.loader.load('avatar', this.url)
-    this.node = this.avatar
-      .toNodes({
-        camera: this.camera,
-        scene: this.scene,
-        octree: null,
-        loader: this.world.loader,
-      })
-      .get('avatar')
-    this.node.activate({})
-    this.node.setEmote(Emotes.IDLE)
+    
     // check we're still alive / didnt destroy
     if (!this.renderer) return
+
     // position camera
     this.positionCamera()
+    
     // render once to get stats
     this.render()
+    
     // calc rank and stats
     this.resolveInfo()
+    
     // start rendering
     this.renderer.setAnimationLoop(this.update)
     return this.info

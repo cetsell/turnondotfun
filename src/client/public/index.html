@@ -1,36 +1,47 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>World</title>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
-    />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <!-- <link rel='icon' href='/favicon.ico' /> -->
-    <link rel="stylesheet" type="text/css" href="/index.css?v={buildId}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyWorld - Immersive 3D Experiences</title>
+    <meta name="description" content="Step into seductive stories brought to life by AI. Explore immersive 3D worlds, customize your avatar, and experience captivating characters with real-time interactions.">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        background-color: #0f0f0f;
+        color: #ffffff;
+        overflow: hidden;
+      }
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 1rem;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="/physx-js-webidl.js"></script>
+    <script src="/env.js?v={buildId}"></script>
     <!--
       SES is loaded via script tag due to esbuild import issues.
       The core has a local copy direct from jsdelivr as jsdelivr occasionally fails.
       Ref: https://cdn.jsdelivr.net/npm/ses@1.10.0/dist/ses.umd.min.js 
     -->
     <script src="/ses.umd.min.js"></script>
-    <!--
-      Yoga is loaded via script tag due to esbuild import issues.
-      The core has a local copy direct from jsdelivr as that occasionally fails.
-      Ref: https://cdn.jsdelivr.net/npm/yoga-layout@3.2.1/+esm
-    -->
-    <script type="module">
-      import Yoga from '/yoga-layout.js'
-      window.Yoga = Yoga
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script src="/physx-js-webidl.js"></script>
-    <script src="/env.js?v={buildId}"></script>
-    <script src="{jsFile}"></script>
+    <script type="module" src="{jsFile}"></script>
   </body>
 </html>

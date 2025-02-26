@@ -1,0 +1,84 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+
+// Fetch marketplace items
+const { data: items } = await supabase
+  .from('marketplace')
+  .select(`
+    *,
+    assets (*),
+    stories (*)
+  `)
+  .eq('status', 'active');
+
+// Group items by category
+const categories = {
+  stories: items?.filter(item => item.story_id),
+  models: items?.filter(item => item.asset_id && item.assets.type === 'model'),
+  environments: items?.filter(item => item.asset_id && item.assets.type === 'environment'),
+  mocap: items?.filter(item => item.asset_id && item.assets.type === 'mocap'),
+};
+---
+
+<Layout title="Marketplace - MyWorld">
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-white mb-8">Marketplace</h1>
+
+    <!-- Category Tabs -->
+    <div class="flex space-x-4 mb-8">
+      <button class="px-4 py-2 rounded-lg bg-purple-600 text-white">All</button>
+      <button class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700">Stories</button>
+      <button class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700">3D Models</button>
+      <button class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700">Environments</button>
+      <button class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700">Mocap Data</button>
+    </div>
+
+    <!-- Stories Section -->
+    {categories.stories && categories.stories.length > 0 && (
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-white mb-6">Stories</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {categories.stories.map((item) => (
+            <div class="bg-gray-800 rounded-lg overflow-hidden">
+              <div class="aspect-video bg-gray-900"></div>
+              <div class="p-4">
+                <h3 class="text-xl font-semibold text-white">{item.stories.title}</h3>
+                <p class="text-gray-400 mt-2">{item.stories.description}</p>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-purple-400 font-semibold">${item.price}</span>
+                  <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Purchase
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- 3D Models Section -->
+    {categories.models && categories.models.length > 0 && (
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-white mb-6">3D Models</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {categories.models.map((item) => (
+            <div class="bg-gray-800 rounded-lg overflow-hidden">
+              <div class="aspect-square bg-gray-900"></div>
+              <div class="p-4">
+                <h3 class="text-lg font-semibold text-white">{item.assets.name}</h3>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-purple-400 font-semibold">${item.price}</span>
+                  <button class="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Buy
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</Layout>

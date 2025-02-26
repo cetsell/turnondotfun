@@ -18,12 +18,14 @@ import {
   TriangleIcon,
   XIcon,
   ZapIcon,
+  ShoppingCartIcon,
 } from 'lucide-react'
 
 import { usePane } from './usePane'
 import { cls } from './cls'
 import { orderBy } from 'lodash-es'
 import { formatBytes } from '../../core/extras/formatBytes'
+import { supabase } from '../lib/supabase'
 
 export function AppsPane({ world, close }) {
   const paneRef = useRef()
@@ -105,55 +107,73 @@ export function AppsPane({ world, close }) {
 }
 
 function AppsPaneContent({ world, query, refresh }) {
-  const [sort, setSort] = useState('count')
+  const [sort, setSort] = useState('created_at')
   const [asc, setAsc] = useState(false)
-  const [target, setTarget] = useState(null)
-  let items = useMemo(() => {
-    const itemMap = new Map() // id -> { blueprint, count }
-    let items = []
-    for (const [_, entity] of this.world.entities.items) {
-      if (!entity.isApp) continue
-      const blueprint = entity.blueprint
-      if (!blueprint) continue // still loading?
-      let item = itemMap.get(blueprint.id)
-      if (!item) {
-        let count = 0
-        const type = blueprint.model.endsWith('.vrm') ? 'avatar' : 'model'
-        const model = world.loader.get(type, blueprint.model)
-        if (!model) continue
-        const stats = model.getStats()
-        const name = blueprint.name || '-'
-        item = {
-          blueprint,
-          keywords: name.toLowerCase(),
-          name,
-          count,
-          geometries: stats.geometries.size,
-          triangles: stats.triangles,
-          textureBytes: stats.textureBytes,
-          textureSize: formatBytes(stats.textureBytes),
-          code: blueprint.script ? 1 : 0,
-          fileBytes: stats.fileBytes,
-          fileSize: formatBytes(stats.fileBytes),
-        }
-        itemMap.set(blueprint.id, item)
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showMarketplace, setShowMarketplace] = useState(false)
+
+  useEffect(() => {
+    async function fetchMarketplaceItems() {
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('marketplace')
+          .select(`
+            listing_id,
+            price,
+            created_at,
+            status,
+            assets (
+              asset_id,
+              type,
+              file_url,
+              quality
+            ),
+            users (
+              username
+            )
+          `)
+          .eq('status', 'active')
+
+        if (error) throw error
+
+        const formattedItems = data.map(item => ({
+          id: item.listing_id,
+          name: item.assets?.file_url.split('/').pop() || 'Unnamed Asset',
+          price: item.price,
+          type: item.assets?.type || 'unknown',
+          quality: item.assets?.quality || 'unknown',
+          seller: item.users?.username || 'Unknown Seller',
+          created_at: item.created_at
+        }))
+
+        setItems(formattedItems)
+      } catch (error) {
+        console.error('Error fetching marketplace items:', error)
+      } finally {
+        setLoading(false)
       }
-      item.count++
     }
-    for (const [_, item] of itemMap) {
-      items.push(item)
+
+    if (showMarketplace) {
+      fetchMarketplaceItems()
     }
-    return items
-  }, [refresh])
-  items = useMemo(() => {
-    let newItems = items
+  }, [refresh, showMarketplace])
+
+  const filteredItems = useMemo(() => {
+    let filtered = items
     if (query) {
       query = query.toLowerCase()
-      newItems = newItems.filter(item => item.keywords.includes(query))
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(query) ||
+        item.seller.toLowerCase().includes(query) ||
+        item.type.toLowerCase().includes(query)
+      )
     }
-    newItems = orderBy(newItems, sort, asc ? 'asc' : 'desc')
-    return newItems
+    return orderBy(filtered, sort, asc ? 'asc' : 'desc')
   }, [items, sort, asc, query])
+
   const reorder = key => {
     if (sort === key) {
       setAsc(!asc)
@@ -162,46 +182,21 @@ function AppsPaneContent({ world, query, refresh }) {
       setAsc(false)
     }
   }
-  useEffect(() => {
-    return () => world.target.hide()
-  }, [])
-  const getClosest = item => {
-    // find closest entity
-    const playerPosition = world.rig.position
-    let closestEntity
-    let closestDistance = null
-    for (const [_, entity] of this.world.entities.items) {
-      if (entity.blueprint === item.blueprint) {
-        const distance = playerPosition.distanceTo(entity.root.position)
-        if (closestDistance === null || closestDistance > distance) {
-          closestEntity = entity
-          closestDistance = distance
-        }
-      }
+
+  const toggleMarketplace = () => {
+    setShowMarketplace(!showMarketplace)
+    if (!showMarketplace) {
+      world.toast('Opening marketplace...')
     }
-    return closestEntity
   }
-  const toggleTarget = item => {
-    if (target === item) {
-      world.target.hide()
-      setTarget(null)
-      return
-    }
-    const entity = getClosest(item)
-    if (!entity) return
-    world.target.show(entity.root.position)
-    setTarget(item)
-  }
-  const inspect = item => {
-    const entity = getClosest(item)
-    world.emit('inspect', entity)
-  }
+
   return (
     <div
       className='asettings'
       css={css`
         flex: 1;
         padding: 20px 20px 0;
+        overflow-y: auto;
         .asettings-head {
           position: sticky;
           top: 0;
@@ -209,6 +204,7 @@ function AppsPaneContent({ world, query, refresh }) {
           display: flex;
           align-items: center;
           margin: 0 0 5px;
+          padding-right: 10px;
         }
         .asettings-headitem {
           font-size: 14px;
@@ -216,169 +212,107 @@ function AppsPaneContent({ world, query, refresh }) {
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
-          &.name {
-            flex: 1;
-          }
-          &.count,
-          &.geometries,
-          &.triangles,
-          &.code {
-            width: 50px;
-            text-align: right;
-          }
-          &.textureSize,
-          &.fileSize {
-            width: 70px;
-            text-align: right;
-          }
-          &.actions {
-            width: 60px;
-            text-align: right;
-          }
-          &:hover:not(.active) {
-            cursor: pointer;
-          }
-          &.active {
-            color: #4088ff;
-          }
-        }
-        .asettings-rows {
-          overflow-y: auto;
-          padding-bottom: 20px;
-          max-height: 300px;
-        }
-        .asettings-row {
-          display: flex;
-          align-items: center;
-          margin: 0 0 5px;
-        }
-        .asettings-rowitem {
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.8);
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-          &.name {
-            flex: 1;
-          }
-          &.count,
-          &.geometries,
-          &.triangles,
-          &.code {
-            width: 50px;
-            text-align: right;
-          }
-          &.textureSize,
-          &.fileSize {
-            width: 70px;
-            text-align: right;
-          }
-          &.actions {
-            width: 60px;
-            display: flex;
-            justify-content: flex-end;
-          }
-        }
-        .asettings-action {
-          margin-left: 10px;
-          color: rgba(255, 255, 255, 0.4);
-          &:hover:not(.active) {
-            cursor: pointer;
+          cursor: pointer;
+          &:hover {
             color: white;
           }
-          &.active {
-            color: #4088ff;
+          &.name {
+            flex: 1;
+          }
+          &.type {
+            width: 100px;
+          }
+          &.quality {
+            width: 80px;
+          }
+          &.price {
+            width: 80px;
+            text-align: right;
+          }
+          &.seller {
+            width: 120px;
+          }
+          &.date {
+            width: 100px;
+          }
+        }
+        .asettings-item {
+          display: flex;
+          align-items: center;
+          padding: 5px 10px;
+          border-radius: 5px;
+          margin-bottom: 5px;
+          &:hover {
+            background: rgba(255, 255, 255, 0.05);
+          }
+          .name {
+            flex: 1;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+          }
+          .type {
+            width: 100px;
+            text-transform: capitalize;
+          }
+          .quality {
+            width: 80px;
+            text-transform: capitalize;
+          }
+          .price {
+            width: 80px;
+            text-align: right;
+          }
+          .seller {
+            width: 120px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+          }
+          .date {
+            width: 100px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
           }
         }
       `}
     >
       <div className='asettings-head'>
-        <div
-          className={cls('asettings-headitem name', { active: sort === 'name' })}
-          onClick={() => reorder('name')}
-          title='Name'
-        >
-          <span>Name</span>
+        <div className='asettings-headitem' onClick={toggleMarketplace}>
+          <ShoppingCartIcon size={16} style={{ marginRight: '8px' }} />
+          Marketplace
         </div>
-        <div
-          className={cls('asettings-headitem count', { active: sort === 'count' })}
-          onClick={() => reorder('count')}
-          title='Instances'
-        >
-          <HashIcon size={16} />
-        </div>
-        <div
-          className={cls('asettings-headitem geometries', { active: sort === 'geometries' })}
-          onClick={() => reorder('geometries')}
-          title='Geometries'
-        >
-          <BoxIcon size={16} />
-        </div>
-        <div
-          className={cls('asettings-headitem triangles', { active: sort === 'triangles' })}
-          onClick={() => reorder('triangles')}
-          title='Triangles'
-        >
-          <TriangleIcon size={16} />
-        </div>
-        <div
-          className={cls('asettings-headitem textureSize', { active: sort === 'textureBytes' })}
-          onClick={() => reorder('textureBytes')}
-          title='Texture Memory Size'
-        >
-          <BrickWallIcon size={16} />
-        </div>
-        <div
-          className={cls('asettings-headitem code', { active: sort === 'code' })}
-          onClick={() => reorder('code')}
-          title='Code'
-        >
-          <FileCode2Icon size={16} />
-        </div>
-        <div
-          className={cls('asettings-headitem fileSize', { active: sort === 'fileBytes' })}
-          onClick={() => reorder('fileBytes')}
-          title='File Size'
-        >
-          <HardDriveIcon size={16} />
-        </div>
-        <div className='asettings-headitem actions' />
       </div>
-      <div className='asettings-rows noscrollbar'>
-        {items.map(item => (
-          <div key={item.blueprint.id} className='asettings-row'>
-            <div className='asettings-rowitem name' onClick={() => target(item)}>
-              <span>{item.name}</span>
-            </div>
-            <div className='asettings-rowitem count'>
-              <span>{item.count}</span>
-            </div>
-            <div className='asettings-rowitem geometries'>
-              <span>{item.geometries}</span>
-            </div>
-            <div className='asettings-rowitem triangles'>
-              <span>{item.triangles}</span>
-            </div>
-            <div className='asettings-rowitem textureSize'>
-              <span>{item.textureSize}</span>
-            </div>
-            <div className='asettings-rowitem code'>
-              <span>{item.code ? 'Yes' : 'No'}</span>
-            </div>
-            <div className='asettings-rowitem fileSize'>
-              <span>{item.fileSize}</span>
-            </div>
-            <div className={'asettings-rowitem actions'}>
-              <div className={cls('asettings-action', { active: target === item })} onClick={() => toggleTarget(item)}>
-                <CrosshairIcon size={16} />
-              </div>
-              <div className={'asettings-action'} onClick={() => inspect(item)}>
-                <EyeIcon size={16} />
-              </div>
-            </div>
+
+      {showMarketplace && (
+        <>
+          <div className='asettings-head'>
+            <div className='asettings-headitem name' onClick={() => reorder('name')}>Name</div>
+            <div className='asettings-headitem type' onClick={() => reorder('type')}>Type</div>
+            <div className='asettings-headitem quality' onClick={() => reorder('quality')}>Quality</div>
+            <div className='asettings-headitem price' onClick={() => reorder('price')}>Price</div>
+            <div className='asettings-headitem seller' onClick={() => reorder('seller')}>Seller</div>
+            <div className='asettings-headitem date' onClick={() => reorder('created_at')}>Date</div>
           </div>
-        ))}
-      </div>
+
+          {loading ? (
+            <div style={{ padding: '20px', textAlign: 'center' }}>Loading marketplace items...</div>
+          ) : filteredItems.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center' }}>No items found</div>
+          ) : (
+            filteredItems.map(item => (
+              <div key={item.id} className='asettings-item'>
+                <div className='name'>{item.name}</div>
+                <div className='type'>{item.type}</div>
+                <div className='quality'>{item.quality}</div>
+                <div className='price'>${item.price}</div>
+                <div className='seller'>{item.seller}</div>
+                <div className='date'>{new Date(item.created_at).toLocaleDateString()}</div>
+              </div>
+            ))
+          )}
+        </>
+      )}
     </div>
   )
 }

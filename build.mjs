@@ -36,7 +36,13 @@ const clientHtmlDest = path.join(rootDir, 'build/public/index.html')
     jsx: 'automatic',
     jsxImportSource: '@firebolt-dev/jsx',
     define: {
-      // 'process.env.NODE_ENV': '"development"',
+      'process.env.NODE_ENV': '"development"',
+      'process.env.SUPABASE_URL': JSON.stringify(process.env.SUPABASE_URL || ''),
+      'process.env.SUPABASE_KEY': JSON.stringify(process.env.SUPABASE_KEY || ''),
+      'process.env.SUPABASE_ANON_KEY': JSON.stringify(process.env.SUPABASE_ANON_KEY || ''),
+      'process.env.PUBLIC_WS_URL': JSON.stringify(process.env.PUBLIC_WS_URL || ''),
+      'process.env.PUBLIC_API_URL': JSON.stringify(process.env.PUBLIC_API_URL || ''),
+      'process.env.PUBLIC_ASSETS_URL': JSON.stringify(process.env.PUBLIC_ASSETS_URL || ''),
     },
     loader: {
       '.js': 'jsx',
@@ -65,6 +71,28 @@ const clientHtmlDest = path.join(rootDir, 'build/public/index.html')
       },
     ],
   })
+
+  // Generate env.js file with environment variables
+  const envJsContent = `
+// Environment variables for the client
+window.process = {
+  env: {
+    NODE_ENV: 'development',
+    PUBLIC_WS_URL: ${JSON.stringify(process.env.PUBLIC_WS_URL || 'http://localhost:3000/ws')},
+    PUBLIC_API_URL: ${JSON.stringify(process.env.PUBLIC_API_URL || 'http://localhost:3000/api')},
+    PUBLIC_ASSETS_URL: ${JSON.stringify(process.env.PUBLIC_ASSETS_URL || 'http://localhost:3000/assets')},
+    SUPABASE_URL: ${JSON.stringify(process.env.SUPABASE_URL || '')},
+    SUPABASE_KEY: ${JSON.stringify(process.env.SUPABASE_KEY || '')},
+    SUPABASE_ANON_KEY: ${JSON.stringify(process.env.SUPABASE_ANON_KEY || '')}
+  }
+};
+  `.trim()
+
+  // Ensure the directory exists before writing the file
+  await fs.ensureDir(clientBuildDir)
+  await fs.writeFile(path.join(clientBuildDir, 'env.js'), envJsContent)
+  console.log('Generated env.js with environment variables')
+
   if (dev) {
     await clientCtx.watch()
   } else {
