@@ -92,3 +92,41 @@ mkdir -p public/videos
 
 In development mode, placeholder images will be generated automatically using the `FeatureImages` component. These are for development purposes only and should be replaced with high-quality images for production.
 
+# TurnOnDotFun - Built on Hyperfy
+
+This project is built on top of the [Hyperfy](https://github.com/hyperfy-xyz/hyperfy) platform, with custom extensions and features for TurnOnDotFun.
+
+## Repository Structure
+
+This repository is set up to track both our custom development and upstream changes from the Hyperfy project:
+
+- `main` branch: Tracks the upstream Hyperfy main branch
+- `dev` branch: Contains our custom development and modifications
+
+## Staying Up to Date with Hyperfy
+
+To pull in the latest changes from the Hyperfy project:
+
+```bash
+# Make sure you're on the main branch
+git checkout main
+
+# Pull the latest changes from Hyperfy
+git pull upstream main
+
+# Switch back to our development branch
+git checkout dev
+
+# Merge the changes from main into dev
+git merge main
+```
+
+This workflow allows us to stay up to date with Hyperfy's development while maintaining our own customizations.
+
+## Development
+
+All custom development should be done on the `dev` branch or feature branches created from `dev`.
+
+## Deployment
+
+Deployment instructions and workflows will be added here.
