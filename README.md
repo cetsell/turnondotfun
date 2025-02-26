@@ -94,7 +94,7 @@ In development mode, placeholder images will be generated automatically using th
 
 # TurnOnDotFun - Built on Hyperfy
 
-This project is built on top of the [Hyperfy](https://github.com/hyperfy-xyz/hyperfy) platform, with custom extensions and features for TurnOnDotFun.
+This project is built on top of the [Hyperfy](https://github.com/hyperfy-xyz/hyperfy) platform, with custom extensions and features for [TurnOnDotFun](https://github.com/cetsell/turnondotfun).
 
 ## Repository Structure
 
