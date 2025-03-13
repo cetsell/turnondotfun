@@ -22,6 +22,7 @@ export class ClientPrefs extends System {
     this.music = isNumber(data.music) ? data.music : 1
     this.sfx = isNumber(data.sfx) ? data.sfx : 1
     this.voice = isNumber(data.voice) ? data.voice : 1
+    this.cameraMode = data.cameraMode ? data.cameraMode : 'firstPerson' // firstPerson, thirdPerson
 
     this.changes = null
   }
@@ -51,6 +52,7 @@ export class ClientPrefs extends System {
       music: this.music,
       sfx: this.sfx,
       voice: this.voice,
+      cameraMode: this.cameraMode,
     })
   }
 
@@ -80,5 +82,9 @@ export class ClientPrefs extends System {
 
   setVoice(value) {
     this.modify('voice', value)
+  }
+  
+  setCameraMode(value) {
+    this.modify('cameraMode', value)
   }
 }

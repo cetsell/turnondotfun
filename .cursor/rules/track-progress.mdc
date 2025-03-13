@@ -1,0 +1,15 @@
+---
+description: After completing each step from implementation-plan.md, update progress.md with the step number, completion date, and notes on deviations or issues.
+globs: 
+alwaysApply: false
+---
+Description: After completing each step from implementation-plan.md, update progress.md with the step number, completion date, and notes on deviations or issues.
+
+When to Apply: Use after finishing any implementation step or milestone.
+
+File Pattern: Applies to all files modified during implementation (broadly scoped).
+
+Reference Files: @implementation-plan.md for step details; @progress.md for tracking.
+
+Rationale: Maintains a clear record of progress and ensures accountability to the plan.
+

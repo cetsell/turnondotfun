@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        #output {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <div>
+        <button id="connect-test">Connect to Test Endpoint</button>
+        <button id="connect-main">Connect to Main Endpoint</button>
+        <button id="send-message" disabled>Send Message</button>
+        <button id="close" disabled>Close Connection</button>
+    </div>
+    <div>
+        <input type="text" id="message" placeholder="Message to send" disabled />
+    </div>
+    <h3>Connection Log:</h3>
+    <div id="output"></div>
+
+    <script>
+        let ws = null;
+        const output = document.getElementById('output');
+        const messageInput = document.getElementById('message');
+        const sendButton = document.getElementById('send-message');
+        const closeButton = document.getElementById('close');
+        
+        function log(message, className) {
+            const entry = document.createElement('div');
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            if (className) {
+                entry.className = className;
+            }
+            output.appendChild(entry);
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+        
+        function enableControls(enabled) {
+            messageInput.disabled = !enabled;
+            sendButton.disabled = !enabled;
+            closeButton.disabled = !enabled;
+        }
+        
+        function connectWebSocket(url) {
+            if (ws) {
+                ws.close();
+                log('Closing previous connection', 'warning');
+            }
+            
+            try {
+                log(`Connecting to ${url}...`);
+                ws = new WebSocket(url);
+                
+                ws.onopen = () => {
+                    log(`Connection established to ${url}`, 'success');
+                    enableControls(true);
+                };
+                
+                ws.onmessage = (event) => {
+                    log(`Received: ${event.data}`, 'success');
+                };
+                
+                ws.onclose = (event) => {
+                    log(`Connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`, 'warning');
+                    enableControls(false);
+                    ws = null;
+                };
+                
+                ws.onerror = (error) => {
+                    log(`Error: ${error}`, 'error');
+                    console.error('WebSocket error:', error);
+                };
+            } catch (error) {
+                log(`Connection error: ${error.message}`, 'error');
+                enableControls(false);
+            }
+        }
+        
+        document.getElementById('connect-test').addEventListener('click', () => {
+            connectWebSocket('ws://localhost:3000/ws-test');
+        });
+        
+        document.getElementById('connect-main').addEventListener('click', () => {
+            const authToken = prompt('Enter auth token (or leave empty):', '');
+            const worldId = prompt('Enter world ID (or leave empty for default):', 'default');
+            const url = `ws://localhost:3000/ws?authToken=${authToken || ''}&worldId=${worldId || 'default'}`;
+            connectWebSocket(url);
+        });
+        
+        document.getElementById('send-message').addEventListener('click', () => {
+            if (!ws) {
+                log('Not connected', 'error');
+                return;
+            }
+            
+            const message = messageInput.value;
+            if (!message) {
+                log('Please enter a message', 'warning');
+                return;
+            }
+            
+            try {
+                ws.send(JSON.stringify({ type: 'message', content: message }));
+                log(`Sent: ${message}`);
+                messageInput.value = '';
+            } catch (error) {
+                log(`Error sending: ${error.message}`, 'error');
+            }
+        });
+        
+        document.getElementById('close').addEventListener('click', () => {
+            if (!ws) {
+                log('Not connected', 'error');
+                return;
+            }
+            
+            try {
+                ws.close();
+                log('Connection closed by user');
+                enableControls(false);
+            } catch (error) {
+                log(`Error closing: ${error.message}`, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

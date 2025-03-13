@@ -1,0 +1,15 @@
+---
+description: Break down scenes, components, and utilities into small, reusable files to avoid a monolithic structure. Update architecture.md with new file purposes as they are created.
+globs: 
+alwaysApply: false
+---
+Description: Break down scenes, components, and utilities into small, reusable files to avoid a monolithic structure. Update architecture.md with new file purposes as they are created.
+
+When to Apply: Use when creating or modifying components, scenes, or utilities that could be split into multiple files.
+
+File Pattern: Applies to .js, .jsx, .ts, .tsx in src/components, src/scenes, and src/utils.
+
+Reference Files: @architecture.md for documenting file purposes; @implementation-plan.md for aligning with modular steps.
+
+Rationale: Ensures scalability and maintainability by preventing a single giant file. Keeps architecture.md as a living reference.
+

@@ -22,12 +22,21 @@ export class ClientNetwork extends System {
     this.queue = []
   }
 
-  init({ wsUrl }) {
+  init({ wsUrl, worldId = 'default' }) {
     const authToken = storage.get('authToken')
-    this.ws = new WebSocket(`${wsUrl}?authToken=${authToken}`)
+    this.worldId = worldId
+    
+    // Add worldId to the WebSocket URL
+    const wsUrlWithParams = new URL(wsUrl, window.location.origin)
+    wsUrlWithParams.searchParams.append('authToken', authToken)
+    wsUrlWithParams.searchParams.append('worldId', worldId)
+    
+    this.ws = new WebSocket(wsUrlWithParams.toString())
     this.ws.binaryType = 'arraybuffer'
     this.ws.addEventListener('message', this.onPacket)
     this.ws.addEventListener('close', this.onClose)
+    
+    console.log(`Connecting to world: ${worldId}`)
   }
 
   preFixedUpdate() {

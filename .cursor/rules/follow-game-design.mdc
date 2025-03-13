@@ -1,0 +1,15 @@
+---
+description: Adhere to the core mechanics and UI specifications outlined in game-design-document.md. Update it if design changes occur during implementation.
+globs: 
+alwaysApply: false
+---
+Description: Adhere to the core mechanics and UI specifications outlined in game-design-document.md. Update it if design changes occur during implementation.
+
+When to Apply: Use when designing scenes, interactions, or UI elements to align with the base game design.
+
+File Pattern: Applies to all files in src/scenes, src/components, and src/ui.
+
+Reference Files: @game-design-document.md for design reference; @progress.md to track implementation alignment.
+
+Rationale: Keeps development consistent with the agreed-upon game vision and ensures documentation evolves with the project.
+

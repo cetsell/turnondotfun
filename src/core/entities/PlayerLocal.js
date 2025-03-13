@@ -648,6 +648,7 @@ export class PlayerLocal extends Entity {
     const isXR = this.world.xr.session
     const freeze = this.data.effect?.freeze
     const anchor = this.getAnchorMatrix()
+    const cameraMode = this.world.prefs.cameraMode
 
     // update cam look direction
     if (isXR) {
@@ -779,17 +780,33 @@ export class PlayerLocal extends Entity {
       this.base.quaternion.slerp(q1, alpha)
     }
 
-    // make camera follow our position horizontally
-    this.cam.position.copy(this.base.position)
-    if (isXR) {
-      // ...
+    // Position camera based on camera mode
+    if (cameraMode === 'thirdPerson' && !isXR) {
+      // Third-person camera positioning
+      // Calculate position behind the player
+      const cameraOffset = new THREE.Vector3(0, this.camHeight + 0.5, 4); // Offset behind and above player
+      
+      // Get the player's forward direction (negative Z)
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.base.quaternion);
+      
+      // Position camera behind player
+      this.cam.position.copy(this.base.position).sub(forward.multiplyScalar(cameraOffset.z));
+      this.cam.position.y = this.base.position.y + cameraOffset.y;
+      
+      // Make camera look at player's head
+      const lookTarget = new THREE.Vector3().copy(this.base.position);
+      lookTarget.y += this.camHeight;
+      
+      // Update camera quaternion to look at player
+      const lookDirection = new THREE.Vector3().subVectors(lookTarget, this.cam.position).normalize();
+      const lookQuaternion = new THREE.Quaternion().setFromUnitVectors(FORWARD, lookDirection);
+      
+      // Blend between direct control and follow camera
+      this.cam.quaternion.slerp(lookQuaternion, 0.1);
     } else {
-      // and vertically at our vrm model height
-      this.cam.position.y += this.camHeight
-      // and slightly to the right over the avatars shoulder, when not in XR
-      const forward = v1.copy(FORWARD).applyQuaternion(this.cam.quaternion)
-      const right = v2.crossVectors(forward, UP).normalize()
-      this.cam.position.add(right.multiplyScalar(0.3))
+      // First-person camera positioning (original behavior)
+      this.cam.position.copy(this.base.position);
+      this.cam.position.y += this.camHeight;
     }
 
     // emote

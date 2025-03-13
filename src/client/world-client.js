@@ -10,7 +10,7 @@ import { CoreUI } from './components/CoreUI'
 
 export { System } from '../core/systems/System'
 
-export function Client({ wsUrl, systems = {} }) {
+export function Client({ wsUrl, worldId = 'default', systems = {} }) {
   const viewportRef = useRef()
   const uiRef = useRef()
   const world = useMemo(() => createClientWorld(), [])
@@ -31,7 +31,7 @@ export function Client({ wsUrl, systems = {} }) {
     for (const [key, System] of Object.entries(systems)) {
       world.register(key, System)
     }
-    world.init({ viewport, ui, wsUrl, loadPhysX, baseEnvironment })
+    world.init({ viewport, ui, wsUrl, worldId, loadPhysX, baseEnvironment })
   }, [])
   return (
     <div

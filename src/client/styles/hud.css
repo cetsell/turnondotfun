@@ -1,0 +1,131 @@
+/* HUD Styles with Frosted Glass Design */
+.game-hud {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Common glass panel styling */
+.glass-panel {
+  backdrop-filter: blur(12px);
+  background-color: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Status bar with what color (green) accent */
+.status-bar-container {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  background-color: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(156, 255, 109, 0.3); /* what color */
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 15px rgba(156, 255, 109, 0.2);
+  padding: 15px 20px;
+}
+
+/* Inventory bar with how color (blue) accent */
+.inventory-bar-container {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 400px;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  background-color: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(109, 194, 255, 0.3); /* how color */
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 15px rgba(109, 194, 255, 0.2);
+  padding: 15px 20px;
+}
+
+/* Notifications panel with who color (orange) accent */
+.notifications-panel-container {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  width: 100%;
+  max-width: 300px;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  background-color: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 136, 109, 0.3); /* who color */
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 15px rgba(255, 136, 109, 0.2);
+  padding: 15px 20px;
+}
+
+/* Animation for notifications */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notification-item {
+  animation: fadeIn 0.3s ease-out forwards;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  backdrop-filter: blur(8px);
+}
+
+/* Health bar with gradient */
+.health-bar-container {
+  background-color: rgba(15, 23, 42, 0.6);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.health-bar-fill {
+  transition: width 0.5s ease-out;
+  background: linear-gradient(to right, #69F0AE, #9CFF6D);
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; box-shadow: 0 0 5px rgba(255, 82, 82, 0.5); }
+  50% { opacity: 1; box-shadow: 0 0 15px rgba(255, 82, 82, 0.8); }
+  100% { opacity: 0.8; box-shadow: 0 0 5px rgba(255, 82, 82, 0.5); }
+}
+
+.health-bar-fill.critical {
+  animation: pulse 1.5s infinite;
+  background: linear-gradient(to right, #FF5252, #FF886D);
+}
+
+/* Inventory slot styling */
+.inventory-slot {
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.inventory-slot:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 15px rgba(109, 194, 255, 0.6);
+  border-color: rgba(109, 194, 255, 0.5);
+}
+
+/* Player name and score styling */
+.player-name {
+  text-shadow: 0 0 10px rgba(156, 255, 109, 0.7);
+  font-weight: bold;
+}
+
+.score {
+  text-shadow: 0 0 10px rgba(248, 218, 87, 0.7);
+  font-weight: bold;
+}

@@ -1,0 +1,82 @@
+/* Avatar Customizer Specific Styles */
+
+.avatar-preview-container {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.asset-button {
+  transition: all 0.2s ease-in-out;
+  border: 2px solid transparent;
+}
+
+.asset-button:hover {
+  transform: translateY(-2px);
+}
+
+.asset-button.selected {
+  border-color: #6DC2FF;
+  box-shadow: 0 0 10px rgba(109, 194, 255, 0.6);
+}
+
+.asset-image {
+  max-width: 100px;
+  max-height: 100px;
+  object-fit: contain;
+  transition: all 0.2s ease;
+}
+
+.category-button {
+  text-transform: capitalize;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.category-button:hover {
+  transform: translateY(-1px);
+}
+
+.category-button.active {
+  background-color: #6DC2FF;
+  color: white;
+  box-shadow: 0 0 10px rgba(109, 194, 255, 0.4);
+}
+
+.save-button {
+  background: linear-gradient(135deg, #9CFF6D, #7ED955);
+  color: rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.save-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.save-button:active {
+  transform: translateY(0);
+}
+
+/* Asset grid scrollbar styling */
+.asset-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.asset-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.asset-grid::-webkit-scrollbar-thumb {
+  background: rgba(109, 194, 255, 0.5);
+  border-radius: 10px;
+}
+
+.asset-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(109, 194, 255, 0.7);
+} 

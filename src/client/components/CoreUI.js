@@ -12,6 +12,7 @@ import {
   UnplugIcon,
   WifiOffIcon,
   ZapIcon,
+  LogOutIcon,
 } from 'lucide-react'
 import moment from 'moment'
 
@@ -28,6 +29,7 @@ import { hasRole, uuid } from '../../core/utils'
 import { ControlPriorities } from '../../core/extras/ControlPriorities'
 import { AppsPane } from './AppsPane'
 import { SettingsPane } from './SettingsPane'
+import { HUDController } from './hud/HUDController'
 
 export function CoreUI({ world }) {
   const [ref, width, height] = useElemSize()
@@ -100,6 +102,7 @@ function Content({ world, width, height }) {
       {disconnected && <Disconnected />}
       <Reticle world={world} />
       {<Toast world={world} />}
+      {ready && player && <HUDController player={player} world={world} />}
       {ready && (
         <Side
           world={world}
@@ -124,6 +127,28 @@ function Side({ world, player, toggleSettings, toggleApps }) {
   const canBuild = useMemo(() => {
     return player && hasRole(player.data.roles, 'admin', 'builder')
   }, [player])
+  const handleExitToLobby = () => {
+    // First disconnect from the world
+    if (world && world.disconnect) {
+      world.disconnect();
+    }
+    
+    // Store the current auth token before navigation
+    const authToken = localStorage.getItem('authToken');
+    
+    // Then navigate to the worlds page using absolute URL
+    window.location.href = `${window.location.origin}/worlds`;
+    
+    // After navigation, ensure the token is still available
+    // This is a safeguard in case the navigation process clears localStorage
+    if (authToken) {
+      setTimeout(() => {
+        if (!localStorage.getItem('authToken')) {
+          localStorage.setItem('authToken', authToken);
+        }
+      }, 100);
+    }
+  }
   useEffect(() => {
     const control = world.controls.bind({ priority: ControlPriorities.CORE_UI })
     control.enter.onPress = () => {
@@ -290,6 +315,9 @@ function Side({ world, player, toggleSettings, toggleApps }) {
               <ZapIcon size={20} />
             </div>
           )}
+          <div className='bar-btn' onClick={handleExitToLobby}>
+            <LogOutIcon size={20} />
+          </div>
         </div>
         <label className={cls('bar-chat', { active: chat })}>
           <input

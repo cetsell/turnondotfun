@@ -3,6 +3,8 @@ import fs from 'fs-extra'
 import path from 'path'
 import * as esbuild from 'esbuild'
 import { fileURLToPath } from 'url'
+// Import our custom Tailwind plugin
+import { tailwindPlugin } from './plugins/tailwind-plugin.mjs'
 
 const dev = process.argv.includes('--dev')
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -35,17 +37,20 @@ const buildDirectory = path.join(rootDir, 'build')
     // },
     loader: {
       '.js': 'jsx',
+      '.css': 'css', // Add CSS loader
     },
     external: ['three', 'react', 'react-dom', 'ses'],
     // alias: {
     //   react: 'react', // always use our own local react (jsx)
     // },
-    plugins: [],
+    plugins: [tailwindPlugin], // Add our Tailwind plugin
   })
+  
   if (dev) {
     await clientCtx.watch()
   } else {
     await clientCtx.rebuild()
-    process.exit(1)
+    await clientCtx.dispose() // Clean up the context to allow process to exit
+    console.log('Client build complete')
   }
 }

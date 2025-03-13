@@ -1,6 +1,6 @@
 import { css } from '@firebolt-dev/css'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { SettingsIcon, SunIcon, UserIcon, Volume2Icon, XIcon } from 'lucide-react'
+import { SettingsIcon, SunIcon, UserIcon, Volume2Icon, XIcon, CameraIcon, LogOutIcon } from 'lucide-react'
 
 import { usePane } from './usePane'
 import { AvatarPreview } from '../AvatarPreview'
@@ -122,6 +122,10 @@ const onOffOptions = [
   { label: 'Off', value: false },
   { label: 'On', value: true },
 ]
+const cameraModeOptions = [
+  { label: 'First Person', value: 'firstPerson' },
+  { label: 'Third Person', value: 'thirdPerson' },
+]
 function GeneralSettings({ world, player }) {
   const [name, setName] = useState(() => player.data.name)
   const [dpr, setDPR] = useState(world.prefs.dpr)
@@ -131,6 +135,32 @@ function GeneralSettings({ world, player }) {
   const [music, setMusic] = useState(world.prefs.music)
   const [sfx, setSFX] = useState(world.prefs.sfx)
   const [voice, setVoice] = useState(world.prefs.voice)
+  const [cameraMode, setCameraMode] = useState(world.prefs.cameraMode)
+  
+  // Function to handle exit to worlds lobby
+  const handleExitToLobby = () => {
+    // First disconnect from the world
+    if (world && world.disconnect) {
+      world.disconnect();
+    }
+    
+    // Store the current auth token before navigation
+    const authToken = localStorage.getItem('authToken');
+    
+    // Then navigate to the worlds page using absolute URL
+    window.location.href = `${window.location.origin}/worlds`;
+    
+    // After navigation, ensure the token is still available
+    // This is a safeguard in case the navigation process clears localStorage
+    if (authToken) {
+      setTimeout(() => {
+        if (!localStorage.getItem('authToken')) {
+          localStorage.setItem('authToken', authToken);
+        }
+      }, 100);
+    }
+  }
+  
   const dprOptions = useMemo(() => {
     const width = world.graphics.width
     const height = world.graphics.height
@@ -148,6 +178,7 @@ function GeneralSettings({ world, player }) {
     if (dpr >= 3) add('Insane', dpr)
     return options
   }, [])
+  
   useEffect(() => {
     const onChange = changes => {
       // TODO: rename .dpr
@@ -158,12 +189,14 @@ function GeneralSettings({ world, player }) {
       if (changes.music) setMusic(changes.music.value)
       if (changes.sfx) setSFX(changes.sfx.value)
       if (changes.voice) setVoice(changes.voice.value)
+      if (changes.cameraMode) setCameraMode(changes.cameraMode.value)
     }
     world.prefs.on('change', onChange)
     return () => {
       world.prefs.off('change', onChange)
     }
   }, [])
+  
   return (
     <div
       className='general noscrollbar'
@@ -220,6 +253,16 @@ function GeneralSettings({ world, player }) {
               }
               player.modify({ name })
             }}
+          />
+        </div>
+      </div>
+      <div className='general-field'>
+        <div className='general-field-label'>Camera Mode</div>
+        <div className='general-field-input'>
+          <InputSwitch
+            options={cameraModeOptions}
+            value={cameraMode}
+            onChange={mode => world.prefs.setCameraMode(mode)}
           />
         </div>
       </div>
@@ -291,6 +334,36 @@ function GeneralSettings({ world, player }) {
             step={0.05}
             instant
           />
+        </div>
+      </div>
+      <div className='general-section'>
+        <LogOutIcon size={16} />
+        <span>Exit</span>
+      </div>
+      <div className='general-field'>
+        <div className='general-field-label'>Exit to Lobby</div>
+        <div className='general-field-input'>
+          <button
+            onClick={handleExitToLobby}
+            css={css`
+              background: rgba(255, 59, 48, 0.2);
+              color: rgba(255, 59, 48, 1);
+              border: none;
+              border-radius: 4px;
+              padding: 8px 12px;
+              font-size: 14px;
+              font-weight: 500;
+              cursor: pointer;
+              transition: background 0.2s;
+              width: 100%;
+              text-align: center;
+              &:hover {
+                background: rgba(255, 59, 48, 0.3);
+              }
+            `}
+          >
+            Return to Worlds Lobby
+          </button>
         </div>
       </div>
     </div>

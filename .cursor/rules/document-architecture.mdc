@@ -1,0 +1,15 @@
+---
+description: Document the purpose and relationships of new files or modules in architecture.md as they are added, referencing game-design-document.md for context.
+globs: 
+alwaysApply: false
+---
+Description: Document the purpose and relationships of new files or modules in architecture.md as they are added, referencing game-design-document.md for context.
+
+When to Apply: Use when creating or significantly modifying files in the project.
+
+File Pattern: Applies to all .ts, .tsx, .js, .jsx files in src.
+
+Reference Files: @architecture.md for structure; @game-design-document.md for feature context.
+
+Rationale: Keeps the project’s architecture clear and prevents confusion as the codebase grows.
+

@@ -1,0 +1,15 @@
+---
+description: Follow Hyperfy integration guidelines from tech-stack.md for real-time 3D features. Update tech-stack.md and architecture.md with Hyperfy-specific setups.
+globs: 
+alwaysApply: false
+---
+Description: Follow Hyperfy integration guidelines from tech-stack.md for real-time 3D features. Update tech-stack.md and architecture.md with Hyperfy-specific setups.
+
+When to Apply: Use when setting up or modifying Hyperfy-related code.
+
+File Pattern: Applies to files in src/hyperfy or files importing Hyperfy modules.
+
+Reference Files: @tech-stack.md for Hyperfy setup; @architecture.md for file structure.
+
+Rationale: Ensures proper Hyperfy usage and keeps documentation aligned with implementation.
+
